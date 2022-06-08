@@ -21,8 +21,14 @@ void main(){
   
   float specAmt = max(0.0, dot(refl, viewDir)); // 반사벡터와 뷰 벡터의 내적값을 구한 뒤, max() 함수로 음수인 내적값 제거. (다른 조명 및 색상값과 더해줘도 음수값이면 어두운 색으로 찍힐 우려가 있어서) 
   float specBright = pow(specAmt, 16.0); // 내적값을 '광택' 값만큼 거듭제곱하여 최종 스펙큘러 라이트 값을 구함. (광택값이 클수록 스펙큘러 영역이 좁아지면서 더 매끄러운 표면으로 묘사됨.)
+  vec3 specCol = lightCol * meshSpecCol * specBright; // '조명색상 * 스펙큘러 하이라이트 색상 * 스펙큘러 라이트값' 을 곱해 스펙큘러 라이트 색상값 결정
 
-  outCol = vec4(lightCol * meshSpecCol * specBright, 1.0); // '조명 색상 * 스펙큘러 하이라이트 색상 * 스펙큘러 라이트값' 을 곱해 최종 색상 결정
+  // 디퓨즈 라이팅 계산 (노멀벡터와 조명벡터를 내적)
+  float diffAmt = max(0.0, dot(normal, lightDir)); // 정규화된 노멀벡터와 조명벡터의 내적값을 구한 뒤, max() 함수로 음수인 내적값 제거.
+  vec3 diffCol = meshCol * lightCol * diffAmt; // '물체의 원색상 * 조명색상 * 디퓨즈 라이트값' 을 곱해 디퓨즈 라이트 색상값 결정
+
+  // outCol = vec4(lightCol * meshSpecCol * specBright, 1.0); // '조명 색상 * 스펙큘러 하이라이트 색상 * 스펙큘러 라이트값' 을 곱해 최종 색상 결정
+  outCol = vec4(diffCol + specCol, 1.0); // '스펙큘러 라이트 색상값 + 디퓨즈 라이트 색상값' 을 합쳐서 최종 색상값 결정
 }
 
 /*
