@@ -15,6 +15,16 @@ glm::vec3 getLightColor(DirectionalLight& l) {
 void ofApp::setup(){
     ofDisableArbTex(); // 스크린 픽셀 좌표를 사용하는 텍스쳐 관련 오픈프레임웍스 레거시 지원 설정 비활성화. (uv좌표계랑 다르니까!)
     ofEnableDepthTest(); // 깊이테스트를 활성화하여 z좌표값을 깊이버퍼에 저장해서 z값을 기반으로 앞뒤를 구분하여 렌더링할 수 있도록 함.
+    ofSetBackgroundColor(128, 128, 128); // 배경색을 회색으로 지정하고, 이와 유사한 색상의 환경광(앰비언트 라이트)이 적용되도록 할거임.
+    
+    /**
+     참고로
+     ofSetBackgroundColor() 함수는
+     배경색을 지정할 때,
+     
+     0.0 ~ 1.0 사이의 정규화된 값이 아닌,
+     0 ~ 255 사이의 실수로 r, g, b 값을 받음!
+     */
     
     torusMesh.load("torus.ply"); // torus 메쉬로 사용할 모델링 파일 로드 (bin/data 디렉토리에 저장했으므로, 파일명만 넣어주면 됨.)
     specularShader.load("lit_mesh.vert", "specular.frag"); // torus 메쉬에 '디퓨즈 라이팅 + 스펙큘러 라이팅'을 적용하기 위한 셰이더 파일 로드
@@ -29,7 +39,7 @@ void ofApp::update(){
 void ofApp::draw(){
     using namespace glm; // 이제부터 현재 블록 내에서 glm 라이브러리에서 꺼내 쓸 함수 및 객체들은 'glm::' 을 생략해서 사용해도 됨.
     DirectionalLight dirLight; // 조명데이터 구조체인 DirectionLight 타입의 객체 변수 dirLight 선언
-    
+        
     cam.pos = vec3(0, 0.75f, 1.0f); // 카메라 위치는 z축으로 1만큼 안쪽으로 들어가게 하고, 조명 연산 결과를 확인하기 위해 y축으로도 살짝 올려줌
     cam.fov = radians(90.0f); // 원근 프러스텀의 시야각은 일반 PC 게임에서는 90도 전후의 값을 사용함. -> 라디안 각도로 변환하는 glm 내장함수 radians() 를 사용함.
     
@@ -84,6 +94,7 @@ void ofApp::draw(){
     specularShader.setUniform3f("lightDir", getLightDirection(dirLight)); // 조명벡터를 음수화하여 뒤집어주고, 다시 정규화하여 길이를 1로 맞춘 뒤, 유니폼 변수로 전송
     specularShader.setUniform3f("lightCol", getLightColor(dirLight)); // 조명색상을 조명강도와 곱해준 뒤, 유니폼 변수로 전송
     specularShader.setUniform3f("meshSpecCol", glm::vec3(1, 1, 1)); // 스펙큘러 하이라이트의 색상을 흰색으로 지정한 뒤, 유니폼 변수로 전송
+    specularShader.setUniform3f("ambientCol", glm::vec3(0.5, 0.5, 0.5)); // 배경색과 동일한 앰비언트 라이트 색상값을 유니폼 변수로 전송.
     torusMesh.draw(); // torus 메쉬 드로우콜 호출하여 그려줌.
     
     specularShader.end();

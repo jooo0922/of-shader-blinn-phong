@@ -6,6 +6,7 @@ uniform vec3 lightCol; // 조명색상 (조명강도가 곱해짐)
 uniform vec3 meshCol; // torus 의 원 색상
 uniform vec3 meshSpecCol; // 스펙큘러 하이라이트의 색상
 uniform vec3 cameraPos; // 각 프래그먼트 -> 카메라 방향의 벡터 (이하 '뷰 벡터' 또는 '카메라 벡터') 계산에 필요한 카메라 월드공간 좌표
+uniform vec3 ambientCol; // 앰비언트 라이트(환경광 또는 글로벌 조명(전역 조명))의 색상 
 
 in vec3 fragNrm; // 버텍스 셰이더에서 받아온 torus 모델의 (월드공간) 노멀벡터가 보간되어 들어온 값
 in vec3 fragWorldPos; // 버텍스 셰이더에서 받아온 torus 모델의 월드공간 위치 좌표가 보간되어 들어온 값
@@ -27,8 +28,11 @@ void main(){
   float diffAmt = max(0.0, dot(normal, lightDir)); // 정규화된 노멀벡터와 조명벡터의 내적값을 구한 뒤, max() 함수로 음수인 내적값 제거.
   vec3 diffCol = meshCol * lightCol * diffAmt; // '물체의 원색상 * 조명색상 * 디퓨즈 라이트값' 을 곱해 디퓨즈 라이트 색상값 결정
 
+  // 앰비언트 라이트 계산 (앰비언트 라이트 색상값과 물체의 원색상을 곱함)
+  vec3 ambient = ambientCol * meshCol; // 물체의 원 색상과 다른 쌩뚱맞은 색이 나오면 안되어서 물체의 원 색상을 곱해주는 것
+
   // outCol = vec4(lightCol * meshSpecCol * specBright, 1.0); // '조명 색상 * 스펙큘러 하이라이트 색상 * 스펙큘러 라이트값' 을 곱해 최종 색상 결정
-  outCol = vec4(diffCol + specCol, 1.0); // '스펙큘러 라이트 색상값 + 디퓨즈 라이트 색상값' 을 합쳐서 최종 색상값 결정
+  outCol = vec4(diffCol + specCol + ambient, 1.0); // '스펙큘러 라이트 색상값 + 디퓨즈 라이트 색상값 + 앰비언트 라이트 색상값(물체의 원색상 반영됨)' 을 합쳐서 최종 색상값 결정
 }
 
 /*
