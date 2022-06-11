@@ -17,11 +17,31 @@ void main(){
   vec3 normal = normalize(fragNrm); // 프래그먼트 셰이더에서 보간된 노멀벡터는 길이가 1로 보존되지 않으므로, 연산에 사용하기 전 다시 정규화해줘야 함.
 
   // 스펙큘러 라이팅 계산 (반사벡터와 노멀벡터를 내적한 뒤, '광택'값만큼 내적값을 거듭제곱함)
-  vec3 refl = reflect(-lightDir, normal); // reflect() 내장함수로 조명벡터와 노멀벡터를 이용하여 반사벡터 계산. (이미 음수화된 반사벡터를 다시 음수화? -> reflect() 함수 관련 하단 필기)
-  vec3 viewDir = normalize(cameraPos - fragWorldPos); // 카메라의 월드공간 좌표 - 각 프래그먼트 월드공간 좌표를 빼서 각 프래그먼트 -> 카메라 방향의 벡터인 뷰 벡터 계산
+  // vec3 refl = reflect(-lightDir, normal); // reflect() 내장함수로 조명벡터와 노멀벡터를 이용하여 반사벡터 계산. (이미 음수화된 반사벡터를 다시 음수화? -> reflect() 함수 관련 하단 필기)
+  // vec3 viewDir = normalize(cameraPos - fragWorldPos); // 카메라의 월드공간 좌표 - 각 프래그먼트 월드공간 좌표를 빼서 각 프래그먼트 -> 카메라 방향의 벡터인 뷰 벡터 계산
   
-  float specAmt = max(0.0, dot(refl, viewDir)); // 반사벡터와 뷰 벡터의 내적값을 구한 뒤, max() 함수로 음수인 내적값 제거. (다른 조명 및 색상값과 더해줘도 음수값이면 어두운 색으로 찍힐 우려가 있어서) 
-  float specBright = pow(specAmt, 16.0); // 내적값을 '광택' 값만큼 거듭제곱하여 최종 스펙큘러 라이트 값을 구함. (광택값이 클수록 스펙큘러 영역이 좁아지면서 더 매끄러운 표면으로 묘사됨.)
+  // float specAmt = max(0.0, dot(refl, viewDir)); // 반사벡터와 뷰 벡터의 내적값을 구한 뒤, max() 함수로 음수인 내적값 제거. (다른 조명 및 색상값과 더해줘도 음수값이면 어두운 색으로 찍힐 우려가 있어서) 
+  // float specBright = pow(specAmt, 16.0); // 내적값을 '광택' 값만큼 거듭제곱하여 최종 스펙큘러 라이트 값을 구함. (광택값이 클수록 스펙큘러 영역이 좁아지면서 더 매끄러운 표면으로 묘사됨.)
+  /*
+    내적의 거듭제곱 지수, 즉 '광택'값이 작아질수록, 
+    조명벡터와 카메라벡터의 각도가 90도를 넘어가서 내적값이 음수로 나오고, 
+    그로 인해 스펙큘러 라이트 값이 0으로 초기화되는 부분과
+    그렇지 않은 부분의 스펙큘러 라이트 값의 갭이 너무 커지다보니
+    각도가 90도를 넘어가는 지점에서부터 날카로운 경계가 생기는 문제가 발생함.
+  */
+  // float specBright = pow(specAmt, 0.5); 
+  // vec3 specCol = lightCol * meshSpecCol * specBright; // '조명색상 * 스펙큘러 하이라이트 색상 * 스펙큘러 라이트값' 을 곱해 스펙큘러 라이트 색상값 결정
+
+  // Blinn-Phong Lighting 공식으로 스펙큘러 라이팅 계산 (하프 벡터 사용)
+  /*
+    위에서 말했듯이, 광택값이 지나치게 작은 경우
+    발생할 수 있는 문제를 해결하기 위해, 또, 내적계산을 줄여주는 성능 최적화를 위해 
+    노멀벡터와 조명벡터 사이의 하프벡터를 구해 사용하는 블린-퐁 모델을 사용함. 
+  */
+  vec3 viewDir = normalize(cameraPos - fragWorldPos); // 카메라의 월드공간 좌표 - 각 프래그먼트 월드공간 좌표를 빼서 각 프래그먼트 -> 카메라 방향의 벡터인 뷰 벡터 계산
+  vec3 halfVec = normalize(viewDir + lightDir); // 뷰 벡터와 조명벡터 사이의 하프벡터를 구함
+  float specAmt = max(0.0, dot(halfVec, normal)); // 하프벡터와 노멀벡터의 내적값을 구한 뒤, max() 함수로 음수값 제거
+  float specBright = pow(specAmt, 2.0); // 퐁 반사모델에서와 동일한 스펙큘러 하이라이트를 얻으려면, 퐁 반사모델에서 사용했던 광택값의 2~4배 값을 거듭제곱해야 함. 따라서 0.5의 4배인 2를 광택값으로 사용함.
   vec3 specCol = lightCol * meshSpecCol * specBright; // '조명색상 * 스펙큘러 하이라이트 색상 * 스펙큘러 라이트값' 을 곱해 스펙큘러 라이트 색상값 결정
 
   // 디퓨즈 라이팅 계산 (노멀벡터와 조명벡터를 내적)
