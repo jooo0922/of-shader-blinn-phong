@@ -34,7 +34,9 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 		
-        ofMesh torusMesh; // torus.ply 모델링 파일을 로드해서 사용할 메쉬 객체 변수 선언
-        ofShader specularShader; // torus.ply 에 '스펙큘러 라이팅 + 디퓨즈 라이팅'을 적용할 때 사용할 셰이더 객체 변수 선언
+        ofMesh shieldMesh; // shield.ply 모델링 파일을 로드해서 사용할 메쉬 객체 변수 선언
+        ofShader blinnPhongShader; // shield.ply 에 Blinn-Phong 반사모델을 적용할 때 사용할 셰이더 객체 변수 선언
         CameraData cam; // 카메라 위치 및 fov(시야각)의 현재 상태값을 나타내는 구조체를 타입으로 갖는 멤버변수 cam 선언
+        ofImage diffuseTex; // shield.ply 에 씌워줄 디퓨즈 맵을 로드하기 위한 이미지 객체 변수 선언
+        ofImage specTex; // shield.ply 에 씌워줄 스펙 맵을 로드하기 위한 이미지 객체 변수 선언
 };
